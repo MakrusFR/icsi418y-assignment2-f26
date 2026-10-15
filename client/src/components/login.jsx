@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-function login() {
+function Login() {
 
     // Constants
     const [username, setUsername] = useState("");
@@ -11,7 +11,7 @@ function login() {
     async function handleSubmit(event) {
         event.preventDefault();
         try {
-            const response = await fetch("http://localhost:9000/login", {
+            const response = await fetch("http://localhost:9000/Login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username, password })
@@ -47,4 +47,4 @@ function login() {
 
 }
 
-export default login;
+export default Login;

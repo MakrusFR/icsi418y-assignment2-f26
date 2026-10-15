@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 
-function signup() {
+function Signup() {
 
     // Constants
     const [username, setUsername] = useState("");
@@ -12,7 +12,7 @@ function signup() {
     async function handleSubmit(event) {
         event.preventDefault();
         try {
-            const response = await fetch("http://localhost:9000/signup", {
+            const response = await fetch("http://localhost:9000/Signup", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username, password })
@@ -47,4 +47,4 @@ function signup() {
     );
 }
 
-export default signup;
+export default Signup;

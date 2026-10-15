@@ -5,6 +5,7 @@ const express = require("express");
 const cors = require("cors");
 
 const app = express();
+let users;
 
 app.use(express.json());
 app.use(cors());
@@ -12,6 +13,7 @@ app.use(cors());
 async function connectDatabase() {
     try {
         await client.connect();
+	users = client.db("client").collection("users");
         console.log("Connected to MongoDB");
     } catch (error) {
         console.error("Could not connect to MongoDB");
