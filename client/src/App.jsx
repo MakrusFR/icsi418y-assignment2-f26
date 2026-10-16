@@ -1,10 +1,13 @@
 import { useState } from 'react'
+import './App.css'
 import heroImg from './assets/hero.png'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
-import './App.css'
 import Signup from "./components/Signup";
 import Login from "./components/Login";
+import CreateProject from "./components/CreateProject";
+import ProjectList from "./components/ProjectList";
+import ProjectMembers from "./components/ProjectMembers";
 
 function App() {
   const [count, setCount] = useState(0)
@@ -13,6 +16,9 @@ function App() {
     <>
       <Signup />
       <Login />
+	  <CreateProject />
+	  <ProjectList />
+	  <ProjectMembers />
       <section id="center">
         <div className="hero">
           <img src={heroImg} className="base" width="170" height="179" alt="" />

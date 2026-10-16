@@ -12,7 +12,7 @@ function Signup() {
     async function handleSubmit(event) {
         event.preventDefault();
         try {
-            const response = await fetch("http://localhost:9000/Signup", {
+            const response = await fetch("http://localhost:9000/signup", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username, password })
@@ -33,11 +33,15 @@ function Signup() {
             <h2>Sign Up</h2>
             <input
                 type="text"
+                placeholder="Username"
+                required
                 value={username}
                 onChange={(event) => setUsername(event.target.value)}
             />
             <input
                 type="password"
+                placeholder="Password"
+                required
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
             />
