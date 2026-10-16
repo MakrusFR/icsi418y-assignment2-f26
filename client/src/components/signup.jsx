@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 
-function Signup() {
+function Signup({ onSignup }) {
 
     // Constants
     const [username, setUsername] = useState("");
@@ -20,6 +20,7 @@ function Signup() {
 
             const data = await response.json();
             setMessage(data.message);
+            if (response.ok && onSignup) onSignup();
         } 
         catch {
             setMessage("Could not connect to server");

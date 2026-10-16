@@ -1,5 +1,5 @@
 require("dotenv").config();
-const { MongoClient } = require("mongodb");
+const { MongoClient, ObjectId } = require("mongodb");
 const client = new MongoClient(process.env.MONGO_URI);
 const express = require("express");
 const cors = require("cors");
@@ -117,7 +117,7 @@ app.post("/api/projects", async (req, res) => {
         return res.status(400).json({ message: "Please fill in every project field." });
     }
 
-    if (!PROJECT_STATUSES.includes(status)) {
+    if (!PROJ_STATUS.includes(status)) {
         return res.status(400).json({ message: "Please choose a valid project status." });
     }
 
