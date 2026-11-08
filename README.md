@@ -1,5 +1,7 @@
 \# Assignment 2: Full-Stack Login and Signup
 
+
+
 Basic Sign in and Login Implementation. Exceptions:
 
 
@@ -27,6 +29,8 @@ Is now able to create and manage projects, assign and unassign users to groups.
 
 
 \# Assignment 4: User Stories and Project Backlog
+
+
 
 Will be able to add stories to existing projects, track progress, and assign work to project members.
 
