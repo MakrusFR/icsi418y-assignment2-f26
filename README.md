@@ -1,30 +1,18 @@
 \# Assignment 2: Full-Stack Login and Signup
 
-Basic Sign in and Login Implementation.
-
-Can handle the following exceptions:
+Basic Sign in and Login Implementation. Exceptions:
 
 
 
 \* One or more required Signup or Login fields are empty.
 
-
-
 \* The requested username already exists.
-
-
 
 \* The username does not exist.
 
-
-
 \* A new user is successfully created.
 
-
-
 \* The password or credentials are incorrect.
-
-
 
 \* A database or server error occurs.
 
@@ -34,11 +22,11 @@ Can handle the following exceptions:
 
 
 
-Can now create and manage projects.
+Is now able to create and manage projects, assign and unassign users to groups.
 
 
 
-# Assignment 4: User Stories and Project Backlog
+\# Assignment 4: User Stories and Project Backlog
 
 Will be able to add stories to existing projects, track progress, and assign work to project members.
 
