@@ -15,6 +15,7 @@ const PROJ_STATUS = ["Planning", "Active", "Completed"];
 let users;
 let projects;
 let memberships;
+let stories;
 
 // Connect to MongoDB
 async function connectDatabase() {
@@ -25,6 +26,7 @@ async function connectDatabase() {
 		users = client.db("client").collection("users");
 		projects = db.collection("projects");
         memberships = db.collection("projectmemberships");
+        stories = db.collection("userstories");
 		
         console.log("Connected to MongoDB");
     } catch (error) {
@@ -244,6 +246,16 @@ app.delete("/api/projects/:projectId/members/:userId", async (req, res) => {
             return res.status(400).json({ message: "The project lead cannot be removed." });
         }
 
+        const assignedStory = await stories.findOne({
+            project_id: projectObjectId,
+            assigned_user_id: userObjectId
+        });
+        if (assignedStory) {
+            return res.status(409).json({
+                message: "Reassign, unassign, or delete this member's stories before removing them."
+            });
+        }
+
         const result = await memberships.deleteOne({
             project_id: projectObjectId,
             user_id: userObjectId
@@ -256,5 +268,147 @@ app.delete("/api/projects/:projectId/members/:userId", async (req, res) => {
         res.json({ message: "Member removed successfully." });
     } catch (error) {
         res.status(500).json({ message: "Could not remove member." });
+    }
+});
+
+// User Stories
+const STORY_PRIORITIES = ["High", "Medium", "Low"];
+const STORY_STATUSES = ["To Do", "In Progress", "Done"];
+
+function validStoryText(value) {
+    return typeof value === "string" && value.trim().length > 0;
+}
+
+async function validateAssignee(projectId, assignedUserId) {
+    if (assignedUserId === null) return { valid: true, value: null };
+    if (!validId(assignedUserId)) return { valid: false };
+
+    const userId = new ObjectId(assignedUserId);
+    const user = await users.findOne({ _id: userId });
+    if (!user) return { valid: false };
+
+    const membership = await memberships.findOne({
+        project_id: projectId,
+        user_id: userId
+    });
+    if (!membership) return { valid: false };
+
+    return { valid: true, value: userId };
+}
+
+// Get all stories belonging to one project.
+app.get("/api/projects/:projectId/stories", async (req, res) => {
+    if (!validId(req.params.projectId)) {
+        return res.status(400).json({ message: "Invalid project id." });
+    }
+
+    try {
+        const projectId = new ObjectId(req.params.projectId);
+        const project = await projects.findOne({ _id: projectId });
+        if (!project) return res.status(404).json({ message: "Project was not found." });
+
+        const result = await stories.find({ project_id: projectId }).sort({ _id: -1 }).toArray();
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ message: "Could not get stories." });
+    }
+});
+
+// Create a story. New stories always start as To Do.
+app.post("/api/projects/:projectId/stories", async (req, res) => {
+    const { projectId } = req.params;
+    const { title, description, priority, assigned_user_id } = req.body;
+
+    if (!validId(projectId) || !validStoryText(title) || !validStoryText(description) ||
+        !STORY_PRIORITIES.includes(priority)) {
+        return res.status(400).json({ message: "Enter a title, description, and valid priority." });
+    }
+
+    try {
+        const projectObjectId = new ObjectId(projectId);
+        const project = await projects.findOne({ _id: projectObjectId });
+        if (!project) return res.status(404).json({ message: "Project was not found." });
+
+        const assignment = await validateAssignee(projectObjectId,
+            assigned_user_id === undefined || assigned_user_id === "" ? null : assigned_user_id);
+        if (!assignment.valid) {
+            return res.status(400).json({ message: "The assigned user must be a member of this project." });
+        }
+
+        const story = {
+            project_id: projectObjectId,
+            title: title.trim(),
+            description: description.trim(),
+            priority,
+            status: "To Do",
+            assigned_user_id: assignment.value
+        };
+        const result = await stories.insertOne(story);
+        res.status(201).json({ ...story, _id: result.insertedId });
+    } catch (error) {
+        res.status(500).json({ message: "Could not create story." });
+    }
+});
+
+// Update a story without allowing its project or database id to change.
+app.put("/api/projects/:projectId/stories/:storyId", async (req, res) => {
+    const { projectId, storyId } = req.params;
+    const { title, description, priority, status, assigned_user_id } = req.body;
+
+    if (!validId(projectId) || !validId(storyId) ||
+        !validStoryText(title) || !validStoryText(description) ||
+        !STORY_PRIORITIES.includes(priority) || !STORY_STATUSES.includes(status)) {
+        return res.status(400).json({ message: "Please enter valid story information." });
+    }
+
+    try {
+        const projectObjectId = new ObjectId(projectId);
+        const storyObjectId = new ObjectId(storyId);
+        const project = await projects.findOne({ _id: projectObjectId });
+        if (!project) return res.status(404).json({ message: "Project was not found." });
+
+        const assignment = await validateAssignee(projectObjectId,
+            assigned_user_id === undefined || assigned_user_id === "" ? null : assigned_user_id);
+        if (!assignment.valid) {
+            return res.status(400).json({ message: "The assigned user must be a member of this project." });
+        }
+
+        const result = await stories.updateOne(
+            { _id: storyObjectId, project_id: projectObjectId },
+            { $set: {
+                title: title.trim(),
+                description: description.trim(),
+                priority,
+                status,
+                assigned_user_id: assignment.value
+            } }
+        );
+
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ message: "Story was not found in this project." });
+        }
+        res.json({ message: "Story updated successfully." });
+    } catch (error) {
+        res.status(500).json({ message: "Could not update story." });
+    }
+});
+
+// Delete a story only when it belongs to the project in the URL.
+app.delete("/api/projects/:projectId/stories/:storyId", async (req, res) => {
+    if (!validId(req.params.projectId) || !validId(req.params.storyId)) {
+        return res.status(400).json({ message: "Invalid project or story id." });
+    }
+
+    try {
+        const result = await stories.deleteOne({
+            _id: new ObjectId(req.params.storyId),
+            project_id: new ObjectId(req.params.projectId)
+        });
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ message: "Story was not found in this project." });
+        }
+        res.json({ message: "Story deleted successfully." });
+    } catch (error) {
+        res.status(500).json({ message: "Could not delete story." });
     }
 });
